@@ -4,13 +4,14 @@ import 'dotenv/config'
 import { Token } from '../models/token';
 import { UserDTO } from '../dto/UserDTO';
 import { ErrorWithStatus } from '../errors/ErrorWithStatus';
+import { InternalServerError } from '../errors/InternalServerError';
 
 class TokenService {
     private static REFRESH_TOKEN_EXPIRE_TIME = "30d"; //in days
     private static ACCESS_TOKEN_EXPIRE_TIME = "30m";
 
     generateTokens(payloads: Required<User>) {
-        if (!process.env.JWT_ACCESS_SECRET || !process.env.JWT_REFRESH_SECRET) throw new ErrorWithStatus(500, "Can't find env variable");
+        if (!process.env.JWT_ACCESS_SECRET || !process.env.JWT_REFRESH_SECRET) throw new InternalServerError("Can't find env variable");
 
         let expireDate = new Date();
         expireDate.setMonth(new Date().getMonth() - 1);
@@ -24,7 +25,7 @@ class TokenService {
     }
 
     async saveRefreshToken(userId: number, refreshToken: string) {
-        if (!process.env.JWT_REFRESH_SECRET) throw new ErrorWithStatus(500, "Can't find env variable");
+        if (!process.env.JWT_REFRESH_SECRET) throw new InternalServerError("Can't find env variable");
         const expireDate = new Date()
         expireDate.setDate(expireDate.getDate() + Number(TokenService.REFRESH_TOKEN_EXPIRE_TIME.slice(0, 2)))
 

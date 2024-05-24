@@ -1,30 +1,21 @@
 import { NextFunction, Request, Response } from "express";
 import userService from "../service/UserService";
-import { ErrorWithStatus } from "../errors/ErrorWithStatus";
 
 class UserController {
     async getUsers(req: Request, res: Response, next: NextFunction) {
-        try {
-            res.json(await userService.getAll());
-        }
-        catch (e) {
-
-        }
+        res.json(await userService.getAll());
     }
 
     async registration(req: Request, res: Response, next: NextFunction) {
-        try {
-            const { email, password } = req.body
-            await userService.registration(email, password);
-            res.status(204).send();
-        }
-        catch (e) {
-            if (e instanceof ErrorWithStatus) {
-                res.status(e.status).send(e.message);
-            } else {
-                console.log(e);
-            }
-        }
+        const { email, password } = req.body
+        await userService.registration(email, password);
+        res.status(204).send();
+    }
+
+    async confirmEmail(req: Request, res: Response, next: NextFunction) {
+        const link = req.params.link;
+        await userService.confirmEmail(link);
+        res.status(204).send();
     }
 
 }
