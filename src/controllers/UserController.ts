@@ -2,9 +2,13 @@ import { NextFunction, Request, Response } from "express";
 
 import { InternalServerError } from "../errors/InternalServerError";
 import userService from "../service/UserService";
+import { RequestWithUser } from "../middleware/authMiddleware";
+import tokenService, { JWTPayloadWithUserDTO } from "../service/TokenService";
 
 class UserController {
     async getUsers(req: Request, res: Response, next: NextFunction) {
+        const userReq = req as RequestWithUser;
+        console.log(userReq.user);
         res.json(await userService.getAll());
     }
 
@@ -15,12 +19,10 @@ class UserController {
     }
 
     async confirmEmail(req: Request, res: Response, next: NextFunction) {
-        if(!process.env.CLIENT_BASE_URL) throw new InternalServerError("Can't find env variable")
+        if (!process.env.CLIENT_BASE_URL) throw new InternalServerError("Can't find env variable")
         const link = req.params.link;
-        const tokens = await userService.confirmEmail(link);
-        if (tokens) 
-            res.cookie('refreshToken', tokens.refreshToken, { maxAge: 30 * 24 * 60 * 60 * 1000, httpOnly: true });
-            res.redirect(process.env.CLIENT_BASE_URL);
+        await userService.confirmEmail(link);
+        res.redirect(`${process.env.CLIENT_BASE_URL}login`);
     }
 
     async login(req: Request, res: Response, next: NextFunction) {
@@ -36,13 +38,33 @@ class UserController {
     }
 
     async logout(req: Request, res: Response, next: NextFunction) {
-        const refreshToken: string = req.body.refreshToken;
+        const refreshToken: string | undefined = req.cookies.refreshToken;
         if (!refreshToken) {
-            res.status(400).send("Can't find parameters");
+            res.status(400).send("Can't find cookie");
             return;
         }
         await userService.logout(refreshToken);
+        res.clearCookie('refreshToken');
         res.status(204).send();
+    }
+
+    async refresh(req: Request, res: Response, next: NextFunction) {
+        const refreshToken: string | undefined = req.cookies.refreshToken;
+        if (!refreshToken) {
+            res.status(400).send("Can't find cookie");
+            return;
+        }
+
+        const userData = tokenService.validateRefreshToken(refreshToken) as JWTPayloadWithUserDTO;
+        if (!userData) {
+            res.status(400).send("Invalid refreshToken");
+            return;
+        }
+        
+        await tokenService.deleteOneByToken(refreshToken);
+        const tokens = await tokenService.generateTokens(userData.userDTO);
+        res.cookie('refreshToken', tokens.refreshToken, { maxAge: 30 * 24 * 60 * 60 * 1000, httpOnly: true });
+        res.status(200).send(tokens);
     }
 
 }

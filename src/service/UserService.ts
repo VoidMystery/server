@@ -21,6 +21,14 @@ class UsersService {
         });
     }
 
+    async findOneById(id: number) {
+        return await User.findAll({
+            where:{
+                id: id
+            }
+        });
+    }
+
     async registration(email: string, password: string) {
         if (!process.env.SERVER_BASE_URL) throw new InternalServerError("Can't find env variable");
         const user = await User.findOne({
@@ -54,11 +62,7 @@ class UsersService {
         if (!user.confirmed) {
             user.confirmed = true;
             await user.save();
-            const accessToken = await tokenService.generateAccessToken(user as Required<User>);
-            const refreshToken = await tokenService.generateRefreshToken(user as Required<User>);
-            return { accessToken, refreshToken};
         }
-        return;
     }
 
     async login(email: string, password: string) {
@@ -68,15 +72,13 @@ class UsersService {
             }
         });
         if (!user || !await bcrypt.compare(password, user.password)) throw new ErrorWithStatus(404, "Wrong authorization data");
-        const accessToken = await tokenService.generateAccessToken(user as Required<User>);
-        const refreshToken = await tokenService.generateRefreshToken(user as Required<User>);
+        const {accessToken, refreshToken} = await tokenService.generateTokens(user as Required<User>);
         return { accessToken, refreshToken, userDTO: new UserDTO(user as Required<User>) };
     }
 
     async logout(refreshToken: string) {
-        const token = await tokenService.findOneByToken(refreshToken);
+        const token = await tokenService.deleteOneByToken(refreshToken);
         if(!token) return;
-        await token.destroy();
     }
 }
 

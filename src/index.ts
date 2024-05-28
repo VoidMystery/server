@@ -6,7 +6,7 @@ require('express-async-errors');
 
 import router from './router';
 import {getSequelize} from './models/sequelize';
-import { errorHandler } from './errors/errorHandler';
+import { errorHandler } from './middleware/errorHandler';
 
 const PORT = process.env.PORT || 5000;
 const app = express();
