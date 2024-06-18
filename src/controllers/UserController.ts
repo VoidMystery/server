@@ -33,7 +33,7 @@ class UserController {
             return;
         }
         const tokens = await userService.login(email, password);
-        res.cookie('refreshToken', tokens.refreshToken, { maxAge: 30 * 24 * 60 * 60 * 1000});
+        res.cookie('refreshToken', tokens.refreshToken, { maxAge: 30 * 24 * 60 * 60 * 1000, httpOnly: true });
         res.status(200).send(tokens);
     }
 
