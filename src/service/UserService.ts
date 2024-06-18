@@ -39,7 +39,7 @@ class UsersService {
         if (user) {
             if (user.confirmed)
                 throw new ErrorWithStatus(409, "Such user is already registered")
-            await mailService.sendActivationMail(user.email, `${process.env.SERVER_BASE_URL}api/confirm/${user.activationLink}`);
+            await mailService.sendActivationMail(user.email, `${process.env.SERVER_BASE_URL}/api/confirm/${user.activationLink}`);
             return;
         }
         const hashedPassword = await bcrypt.hash(password, UsersService.SALT_ROUNDS);

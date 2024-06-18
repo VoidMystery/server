@@ -22,7 +22,7 @@ class UserController {
         if (!process.env.CLIENT_BASE_URL) throw new InternalServerError("Can't find env variable")
         const link = req.params.link;
         await userService.confirmEmail(link);
-        res.redirect(`${process.env.CLIENT_BASE_URL}login`);
+        res.redirect(`${process.env.CLIENT_BASE_URL}/login`);
     }
 
     async login(req: Request, res: Response, next: NextFunction) {
@@ -33,7 +33,7 @@ class UserController {
             return;
         }
         const tokens = await userService.login(email, password);
-        res.cookie('refreshToken', tokens.refreshToken, { maxAge: 30 * 24 * 60 * 60 * 1000, httpOnly: true });
+        res.cookie('refreshToken', tokens.refreshToken, { maxAge: 30 * 24 * 60 * 60 * 1000});
         res.status(200).send(tokens);
     }
 

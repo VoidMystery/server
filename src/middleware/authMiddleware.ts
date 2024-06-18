@@ -13,7 +13,7 @@ const authMiddleware = (req: Request, res: Response, next: NextFunction) => {
     if (!process.env.CLIENT_BASE_URL) throw new InternalServerError("Can't find env variable")
     const authHeader = req.headers.authorization;
     if (!authHeader) {
-        res.redirect(`${process.env.CLIENT_BASE_URL}login`);
+        res.redirect(`${process.env.CLIENT_BASE_URL}/login`);
         return next();
     }
     const accessToken = authHeader.split(' ')[1];
