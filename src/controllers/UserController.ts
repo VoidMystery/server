@@ -23,6 +23,7 @@ class UserController {
         if (!email || !password) {
             res.statusMessage = "Can't find parameters";
             res.status(400).end();
+            return;
         }
         await userService.registration(email, password);
         res.status(204).send();
@@ -41,6 +42,7 @@ class UserController {
         if (!email || !password) {
             res.statusMessage = "Can't find parameters";
             res.status(400).end();
+            return;
         }
         const tokensWithUserDTO = await userService.login(email, password);
         res.cookie('refreshToken', tokensWithUserDTO.refreshToken, { maxAge: REFRESH_TOKEN_EXPIRE_TIME_IN_SECONDS*1000, httpOnly: true });

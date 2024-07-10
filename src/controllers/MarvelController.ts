@@ -3,7 +3,7 @@ import { NextFunction, Request, Response } from "express";
 import { marvelService } from "../service/MarvelService";
 
 class MarvelController {
-    async getCharacterByName(req: Request, res: Response, next: NextFunction) {
+    async getCharacterByName(req: Request, res: Response) {
         const { name} = req.params;
         if (!name) {
             res.statusMessage = "Can't find parameter";
