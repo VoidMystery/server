@@ -9,12 +9,24 @@ export type JWTPayloadWithUserDTO = JwtPayload & {
     userDTO: UserDTO
 }
 
+//                                                  s  m  h  d
+export const REFRESH_TOKEN_EXPIRE_TIME_IN_SECONDS = 60*60*60*30;
+export const ACCESS_TOKEN_EXPIRE_TIME_IN_SECONDS = 60*60;
+
 class TokenService {
-    private static REFRESH_TOKEN_EXPIRE_TIME = "30d"; //in days
-    private static ACCESS_TOKEN_EXPIRE_TIME = "30m";
+
+    private JWT_ACCESS_SECRET;
+    private JWT_REFRESH_SECRET;
+
+    constructor(){
+        if (!process.env.JWT_ACCESS_SECRET || !process.env.JWT_REFRESH_SECRET) throw new InternalServerError("Can't find env variable");
+        this.JWT_ACCESS_SECRET=process.env.JWT_ACCESS_SECRET;
+        this.JWT_REFRESH_SECRET=process.env.JWT_REFRESH_SECRET;
+
+    }
 
     async generateTokens(payloads: Required<User> | UserDTO) {
-        if (!process.env.JWT_ACCESS_SECRET || !process.env.JWT_REFRESH_SECRET) throw new InternalServerError("Can't find env variable");
+        
         let userDTO: UserDTO;
         if (payloads instanceof UserDTO) {
             userDTO = payloads;
@@ -22,11 +34,11 @@ class TokenService {
             userDTO = new UserDTO(payloads);
         }
 
-        const accessToken = jwt.sign({ userDTO }, process.env.JWT_ACCESS_SECRET, { expiresIn: TokenService.ACCESS_TOKEN_EXPIRE_TIME });
-        const refreshToken = jwt.sign({ userDTO }, process.env.JWT_REFRESH_SECRET, { expiresIn: TokenService.REFRESH_TOKEN_EXPIRE_TIME });
+        const accessToken = jwt.sign({ userDTO }, this.JWT_ACCESS_SECRET, { expiresIn: ACCESS_TOKEN_EXPIRE_TIME_IN_SECONDS });
+        const refreshToken = jwt.sign({ userDTO }, this.JWT_REFRESH_SECRET, { expiresIn: REFRESH_TOKEN_EXPIRE_TIME_IN_SECONDS});
 
         const expireDate = new Date()
-        expireDate.setDate(expireDate.getDate() + Number(TokenService.REFRESH_TOKEN_EXPIRE_TIME.slice(0, 2)))
+        expireDate.setDate(expireDate.getDate() + Math.floor(REFRESH_TOKEN_EXPIRE_TIME_IN_SECONDS/60/60/60));
 
         // expireDate = expireDate.toISOString().split("T")[0];
         await Token.create({
@@ -55,13 +67,11 @@ class TokenService {
     }
 
     validateAccessToken(accessToken: string) {
-        if (!process.env.JWT_ACCESS_SECRET) throw new InternalServerError("Can't find env variable");
-        return jwt.verify(accessToken, process.env.JWT_ACCESS_SECRET);
+        return jwt.verify(accessToken, this.JWT_ACCESS_SECRET);
     }
 
     validateRefreshToken(refreshToken: string) {
-        if (!process.env.JWT_REFRESH_SECRET) throw new InternalServerError("Can't find env variable");
-        return jwt.verify(refreshToken, process.env.JWT_REFRESH_SECRET);
+        return jwt.verify(refreshToken, this.JWT_REFRESH_SECRET);
 
     }
 }

@@ -16,7 +16,7 @@ export const Token = getSequelize().define<Token>("token", {
         autoIncrement: true
     },
     token: {
-        type: DataTypes.INTEGER,
+        type: DataTypes.STRING,
         unique: true,
         allowNull: false
     },
